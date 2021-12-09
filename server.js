@@ -3,31 +3,29 @@ const app = express();
 const db = require("./db");
 const cookieParser = require("cookie-parser");
 const hb = require("express-handlebars");
-const { create } = require("express-handlebars");
+const { engine } = require("express-handlebars");
 
-const hbs = create({
-    helpers: {
-        getRandomNum() {
-            return Math.floor(Math.random() * 250);
-        },
-    },
-});
-app.engine("handlebars", hbs.engine);
+app.engine("handlebars", engine());
 app.set("view engine", "handlebars");
 
+//middlewares
 app.use(express.static("./public"));
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded());
+app.use(cookieParser());
 
 app.get("/petition", (req, res) => {
     db.getSignatures()
         .then(({ rows }) => {
             console.log("getSignatures db results", rows);
+            // if signed
+            // res.redirect("/thanks")
+            // else
+            res.render(petition.handlebars);
         })
-        .then(res.redirect("/thanks"))
         .catch((err) => console.log("err in getSignatures", err));
 });
 
-// app.post("/add-signature", (req, res) => {
+// app.post("/add-petition", (req, res) => {
 //     db.addSignatures("Janell", "Monroe", "JM")
 //         .then(() => {
 //             console.log("yeah signature added");

@@ -1,0 +1,12 @@
+<form action="/add-petition" method="post">
+
+    <input type="text" name="firstName" />
+    <input type="text" name="lastName" />
+    <input type="hidden" name="signature" value="🧁" />
+    {{#if error}}
+        <p>Failed to insert signature 😞</p>
+    {{/if}}
+    <button type="submit">COOL🕺</button>
+</form>
+
+{{! ! contains a link to your script.js file that contains the code for your canvas signature logic }}
