@@ -1,12 +1,20 @@
 <form action="/add-petition" method="post">
-
     <input type="text" name="firstName" />
     <input type="text" name="lastName" />
-    <input type="hidden" name="signature" value="🧁" />
+
+    <br />
+    <input type="hidden" name="signature" id="signature" />
+    <br />
+    <canvas width="500" height="200" id="inputCanvas"></canvas>
+    <br />
+    <br />
+    <button type="reset"><strong>RESET💩</strong></button>
+    {{! the form field for the signature is type="hidden" (for development purposes, if you havn't coded the clientside-JS-logic to let the user sign on the canvas, you can hardcode some value to insert it into the database for interims }}
     {{#if error}}
         <p>Failed to insert signature 😞</p>
     {{/if}}
-    <button type="submit">COOL🕺</button>
+
+    <button type="submit"><strong>COOL🕺</strong></button>
 </form>
 
 {{! ! contains a link to your script.js file that contains the code for your canvas signature logic }}

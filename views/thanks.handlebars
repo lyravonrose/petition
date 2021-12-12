@@ -1,3 +1,8 @@
-<p>Thank You for Signing 🥰</p>
+<h2>Thank You for Signing 🥰</h2>
 <a href="/signers">🤝 THE GOOD PEOPLE 🤝</a>
 <p>{{signatureCount}} people have signed 🎭 </p>
+
+{{#if signature}}
+    <img src="{{canvas}}" />
+{{/if}}
+{{! Signature can be rendered onscreen by putting the signature URL in an image tag in here. }}

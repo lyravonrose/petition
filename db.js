@@ -11,11 +11,19 @@ console.log("db: ", db);
 console.log(`[db] connecting to:${database}`);
 
 module.exports.getSignatures = () => {
-    const q = "SELECT * FROM signatures";
+    const q = "SELECT signature FROM signatures WHERE id = $1";
+    return db.query(q);
+};
+module.exports.getSignatureNumbers = () => {
+    const q = "SELECT COUNT(*) FROM signatures";
+    return db.query(q);
+};
+module.exports.getSigners = () => {
+    const q = "SELECT first, last FROM signatures";
     return db.query(q);
 };
 module.exports.addSignatures = (firstName, lastName, signature) => {
-    const q = `INSERT INTO signatures (first, last, signature) VALUES ($1, $2, $3)`;
+    const q = `INSERT INTO signatures (first, last, signature) VALUES ($1, $2, $3) RETURNING id`;
     const params = [firstName, lastName, signature];
     return db.query(q, params);
 };
@@ -24,3 +32,5 @@ module.exports.addSignatures = (firstName, lastName, signature) => {
 //         console.log("result from the database:", dbResult.rows);
 //     })
 //     .catch((err) => console.log("err in query:", err));
+
+// vulnerability concerns

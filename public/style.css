@@ -1,0 +1,26 @@
+* {
+    background-color: palevioletred;
+    color: rgb(21, 94, 112);
+}
+
+body {
+    text-align: center;
+    margin: 30px;
+    padding: 40px;
+    border: 2px solid oldlace;
+    position: absolute;
+    top: 0;
+    left: 60%;
+    transform: translateX(-80%);
+}
+
+canvas {
+    background-color: antiquewhite;
+    color: rgb(77, 16, 26);
+    border: 3px inset rgb(165, 81, 165);
+}
+
+button {
+    background-color: rgba(211, 123, 137, 0.3);
+    border-radius: 0px 20px;
+}
