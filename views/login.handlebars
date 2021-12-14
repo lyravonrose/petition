@@ -1,0 +1,11 @@
+<form action="/login" method="post">
+    <p>Please log in 👽</p>
+    <input type="email" placeholder="email" name="email" />
+    <br />
+    <input type="password" placeholder="password" name="password" />
+    <br />
+    <button type="submit"><strong>LOG IN</strong></button>
+    {{#if err}}
+        <p>Failed to login 😞</p>
+    {{/if}}
+</form>

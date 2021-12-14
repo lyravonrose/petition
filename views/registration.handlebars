@@ -1,0 +1,15 @@
+<form action="/registration" method="post">
+    <p>please support by joining us 🤡</p>
+    <input type="text" placeholder="firstname" name="firstName" />
+    <br />
+    <input type="text" placeholder="lastname" name="lastName" />
+    <br />
+    <input type="email" placeholder="email" name="email" />
+    <br />
+    <input type="password" placeholder="password" name="password" />
+    <br />
+    <button type="submit"><strong>SIGN UP</strong></button>
+    {{#if err}}
+        <p>Error on registration 😞</p>
+    {{/if}}
+</form>

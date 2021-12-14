@@ -1,9 +1,10 @@
 const express = require("express");
 const app = express();
 const db = require("./db");
-const hb = require("express-handlebars");
+// const hb = require("express-handlebars");
 const { engine } = require("express-handlebars");
 const cookieSession = require("cookie-session");
+const { compare, hash } = require("./bc");
 
 app.engine("handlebars", engine());
 app.set("view engine", "handlebars");
@@ -25,68 +26,115 @@ app.use(
 );
 
 app.get("/", (req, res) => {
-    console.log("req.session before:", req.session);
-    req.session.onion = "bigSecret1111";
-    // req.session.signatureId = rows[0].id;
-    console.log("req.session after: ", req.session);
-    res.redirect("/petition");
+    res.redirect("/register");
 });
 
-//cookies
+app.get("/register", (req, res) => {
+    res.render("registration", {});
+});
+
+app.post("/register", (req, res) => {
+    const { first, last, email, password } = req.body;
+    hash(password)
+        .then((hashedPw) => {
+            console.log("hashedPW:", hashedPw);
+            db.addUsers(firstName, lastName, userEmail, hashedPw);
+        })
+        .then(({ rows }) => {
+            req.session.userId = rows[0].id;
+            res.redirect("/petition");
+        })
+        .catch((err) => {
+            console.log("err in hash", err);
+            res.render("registration");
+        });
+});
+
+app.get("/login", (req, res) => {
+    res.render("login", {});
+});
+app.post("/login", (req, res) => {
+    // this is where we will want to use compare
+    // we'd first go to the database to retreive the hash
+    // for the email that the user provided
+    const { email, password } = req.body;
+    const claimedPassword = req.body.password;
+    db.getUserByEmailAdress(email)
+        .then((result) => {
+            console.log(result);
+            compare(password, result.rows[0].password)
+                .then((match) => {
+                    console.log(
+                        "do provided PW and db stored hash match?",
+                        match
+                    );
+                    res.sendStatus(200);
+                    res.redirect("/petition");
+                })
+                .catch((err) => {
+                    console.log("err in compare:", err);
+                    res.render("login");
+                });
+        })
+        .catch((err) => {
+            console.log("err in compare:", err);
+            res.render("login");
+        });
+});
+
 app.get("/petition", (req, res) => {
     console.log("req.session in petition route: ", req.session);
-    if (req.session.onion === "bigSecret1111") {
-        res.render("petition");
-    } else {
-        res.send("<h1>🤷‍♂️</h1>");
-    }
-    //access database by row, cookies = rows[0].id
-});
-
-app.get("/petition", (req, res) => {
-    db.getSignatures().then(({ rows }) => {
-        console.log("getSignatures db results", rows);
-        // if signed
+    if (req.session.signed) {
         res.redirect("/thanks");
-        // else
+    } else {
         res.render("petition");
-    });
-    // .catch((err) => console.log("err in getSignatures", err));
+    }
 });
 
 app.post("/petition", (req, res) => {
-    data = req.body;
-    db.addSignatures(data.params[0], data.params[1], data.params[2])
-        .then(() => {
-            res.cookie();
-            //set cookie to remember that the user has signed (do this last → this logic will change in the future)
+    const data = req.body;
+    console.log("IN POST/petition", req.body);
+    db.addSignatures(data.first, data.last, data.signature)
+        .then(({ rows }) => {
+            req.session.signed = rows[0].id;
             res.redirect("/thanks");
             console.log("yeah signature added");
         })
-        //if submit signature rejected
-        // res.render("/petition")
         .catch((err) => {
             console.log("no signatures added :(", err);
             res.render("/petition");
         });
 });
-
 app.get("/thanks", (req, res) => {
-    const { signatureId } = req.session;
-    // db query to get signature using signatureId
-    // pass signature back to client to render onscreen
-    res.render("thanks", {
-        layout: "main",
+    console.log("/thanks", req.session);
+    const signatureId = req.session.signed;
+    db.getSignatures(signatureId).then(({ rows }) => {
+        if (rows.length) {
+            res.render("/thanks");
+        } else {
+            res.redirect("/petition");
+        }
     });
 });
 
 app.get("/signers", (req, res) => {
-    res.render("signers").catch((err) => {
-        res.redirect("/petition");
-    });
+    db.getSigners()
+        .then(({ rows: signers }) => {
+            res.render("signers", signers);
+        })
+        .catch((err) => {
+            res.redirect("/petition");
+        });
     //SELECT first and last values of every person that has signed from the database and pass them to signers.handlebars
-    // params[0], params[1];
 });
+
+app.get("/profile", (req, res) => {
+    res.redirect("profile", {});
+});
+app.post("/profile", (req, res) => {
+    res.redirect("profile", {});
+});
+
 app.listen(8080, () => console.log("petition server listening 🍌"));
 
 //atob(), btoa()

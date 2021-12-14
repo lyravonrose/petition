@@ -1,6 +1,6 @@
-<form action="/add-petition" method="post">
-    <input type="text" name="firstName" />
-    <input type="text" name="lastName" />
+<form action="/petition" method="post">
+    {{! <input type="text" name="firstName" />
+    <input type="text" name="lastName" /> }}
 
     <br />
     <input type="hidden" name="signature" id="signature" />
@@ -9,8 +9,7 @@
     <br />
     <br />
     <button type="reset"><strong>RESET💩</strong></button>
-    {{! the form field for the signature is type="hidden" (for development purposes, if you havn't coded the clientside-JS-logic to let the user sign on the canvas, you can hardcode some value to insert it into the database for interims }}
-    {{#if error}}
+    {{#if err}}
         <p>Failed to insert signature 😞</p>
     {{/if}}
 
