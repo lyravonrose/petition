@@ -1,14 +1,14 @@
   DROP TABLE IF EXISTS signatures;
   DROP TABLE IF EXISTS users;
-  -- DROP TABLE IF EXISTS users_profiles;
+  DROP TABLE IF EXISTS user_profiles;
   
-      -- CREATE TABLE user_profiles (
-    --   id SERIAL PRIMARY KEY,
-    --   age INT NOT NULL,
-    --   url VARCHAR(255) NOT NULL,
-    --   city VARCHAR(255) NOT NULL,
-    --   user_id INT NOT NULL UNIQUE
-    -- )
+    CREATE TABLE user_profiles(
+      id SERIAL PRIMARY KEY,
+      age INT NOT NULL,
+      url VARCHAR(255) NOT NULL,
+      city VARCHAR(255) NOT NULL,
+      user_id INT NOT NULL UNIQUE
+    );
 
     CREATE TABLE users(
       id SERIAL PRIMARY KEY,

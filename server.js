@@ -6,10 +6,21 @@ const { engine } = require("express-handlebars");
 const cookieSession = require("cookie-session");
 const { compare, hash } = require("./bc");
 
+const packageLock =
+    process.env.PACKAGE_LOCK || require("./package-lock").PACKAGE_LOCK;
+
 app.engine("handlebars", engine());
 app.set("view engine", "handlebars");
 
 //middlewares
+if (process.env.NODE_ENV == "production") {
+    app.use((req, res, next) => {
+        if (req.headers["x-forwarded-proto"].startsWith("https")) {
+            return next();
+        }
+        res.redirect(`https://${req.hostname}${req.url}`);
+    });
+}
 app.use(express.static("./public"));
 app.use(express.urlencoded({ extended: false }));
 app.use((req, res, next) => {
@@ -38,11 +49,11 @@ app.post("/register", (req, res) => {
     hash(password)
         .then((hashedPw) => {
             console.log("hashedPW:", hashedPw);
-            db.addUsers(firstName, lastName, userEmail, hashedPw);
+            return db.addUsers(first, last, email, hashedPw);
         })
         .then(({ rows }) => {
             req.session.userId = rows[0].id;
-            res.redirect("/petition");
+            res.redirect("/profile");
         })
         .catch((err) => {
             console.log("err in hash", err);
@@ -129,12 +140,47 @@ app.get("/signers", (req, res) => {
 });
 
 app.get("/profile", (req, res) => {
-    res.redirect("profile", {});
+    res.render("profile", {});
 });
 app.post("/profile", (req, res) => {
-    res.redirect("profile", {});
+    const { age, url, city } = req.body;
+    console.log("IN POST/profile", req.body);
+    db.addProfile(age, url, city)
+        .then(({ rows }) => {
+            req.session.signed = rows[0].id;
+            res.redirect("/petition");
+        })
+        .catch((err) => {
+            console.log("no info added :(", err);
+            res.render("/profile");
+        });
+
+    if (age || url || city === null) {
+        res.redirect("");
+    }
+    // When the user submits the form from the GET route, the data should go into the new user_profiles table. All of the data is optional, so if none of it is present you can skip doing the query. Either way, you should end by redirecting to /petition (unless there's an error, in which case you should re-render the form).
 });
 
-app.listen(8080, () => console.log("petition server listening 🍌"));
+app.listen(process.env.PORT || 8080, () =>
+    console.log("petition server listening 🍌")
+);
 
 //atob(), btoa()
+
+app.post("/profile/edit", (req, res) => {
+    if (!req.body.password) {
+        // HERE!!!
+        // user has not changed their password
+        // we should leave the value in the DB as it is
+    } else {
+        req.body.password;
+        //user has updated password
+        //we should update db with new value
+    }
+});
+
+// DELETE FROM users WHERE id = $1;
+
+/* <form action="delete-signature" method="POST">
+    <button>Delete Signature</button>
+</form> */

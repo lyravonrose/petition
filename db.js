@@ -5,7 +5,9 @@ const username = "postgres";
 const password = "postgres";
 
 const db = spicedPg(
-    `postgres:${username}:${password}@localhost:5432/${database}`
+    process.env.DATABASE_URL ||
+        "postgres://spicedling:password@localhost:5432/petition"
+    // `postgres:${username}:${password}@localhost:5432/${database}`
 );
 console.log("db: ", db);
 console.log(`[db] connecting to:${database}`);
