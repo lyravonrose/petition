@@ -36,8 +36,7 @@ module.exports.getSignersFromCity = (userCity) => {
     LEFT JOIN user_profiles
     ON users.id = user_profiles.user_id
     INNER JOIN signatures
-    ON users.id = signatures.user_id
-    WHERE LOWER(city)= LOWER($1)`;
+    ON users.id = signatures.user_id WHERE LOWER(city)= LOWER($1)`;
     const params = [userCity];
     return db.query(q, params);
 };
@@ -69,61 +68,63 @@ module.exports.getUserByEmailAdress = (email) => {
     return db.query(q, params);
 };
 
+module.exports.getUserProfile = (userId) => {
+    const q = `
+        SELECT
+            users.id, users.first, users.last, users.email,
+        FROM users
+        LEFT JOIN user_profiles
+        ON users.id = user_profiles.user_id
+        WHERE users.id = $1
+    `;
+    const params = [userId];
+    return db.query(q, params);
+};
+
 module.exports.addProfile = (userId, userAge, userCity, userUrl) => {
     const q = `INSERT INTO user_profiles (user_id, age, city, url) VALUES ($1, $2, $3, $4)`;
     const params = [userId, userAge, userCity, userUrl];
     return db.query(q, params);
 };
-module.exports.editProfile = (
-    firstName,
-    lastName,
-    userEmail,
-    userAge,
-    userCity,
-    userUrl
-) => {
-    const q = `SELECT users.id, users.first, users.last, users.email FROM users
-    JOIN user_profiles
-    ON users.id = user_profiles.user_id`;
-    const params = [
-        userId,
-        firstName,
-        lastName,
-        userEmail,
-        userPassword,
-        userAge,
-        userCity,
-        userUrl,
-    ];
+
+module.exports.checkIfUserSkipped = (userId, userAge, userUrl, userCity) => {
+    const q = `INSERT INTO user_profiles (user_id, age, url, city)
+    VALUES ($1,$2,$3, $4)
+    ON CONFLICT (user_profiles.user_id)
+    DO UPDATE SET age = $2, url = $3, city = $4;`;
+    const params = [userId, userAge, userUrl, userCity];
     return db.query(q, params);
 };
 
-`INSERT INTO users (first, last, email)
-VALUES ('Penélope Cruz', 43, 1)
-ON CONFLICT (name)
-DO UPDATE SET age = 43, oscars = 1;`;
+module.exports.editUsers = (userId, firstName, lastName, userEmail) => {
+    const q = `UPDATE users SET (first, last, email) = ($2, $3, $4) WHERE users.id = $1`;
+    const params = [userId, firstName, lastName, userEmail];
+    return db.query(q, params);
+};
 
-module.exports.updateProfile = (
+module.exports.editUserProfile = (userId, userAge, userUrl, userCity) => {
+    const q = `INSERT INTO user_profiles (user_id, age, url, city)
+    VALUES ($1,$2,$3, $4)
+    ON CONFLICT (user_id)
+    DO UPDATE SET user_id = $1, age = $2, url = $3, city = $4;`;
+    const params = [userId, userAge, userUrl, userCity];
+    return db.query(q, params);
+};
+
+module.exports.editUsersWithPassword = (
+    userId,
     firstName,
     lastName,
     userEmail,
-    userAge,
-    userCity,
-    userUrl
+    password
 ) => {
-    const q = `INSERT INTO users (first, last, email)
-    VALUES ($1, $2, $3)
-    INSERT INTO user_profiles(age,city, url)
-    ON users.id = user_profiles.id`;
-    const params = [
-        userId,
-        firstName,
-        lastName,
-        userEmail,
-        userPassword,
-        userAge,
-        userCity,
-        userUrl,
-    ];
+    const q = `UPDATE users SET (first, last, email, password) = ($2, $3, $4, $5) WHERE users.id = $1`;
+    const params = [userId, firstName, lastName, userEmail, password];
+    return db.query(q, params);
+};
+
+module.exports.deleteSig = (userId) => {
+    const q = `DELETE FROM signatures WHERE user_id=$1`;
+    const params = [userId];
     return db.query(q, params);
 };

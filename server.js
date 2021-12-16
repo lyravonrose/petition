@@ -71,7 +71,6 @@ app.post("/login", (req, res) => {
     // we'd first go to the database to retreive the hash
     // for the email that the user provided
     const { email, password } = req.body;
-    // const claimedPassword = req.body.password;
     db.getUserByEmailAdress(email)
         .then((result) => {
             console.log(result);
@@ -96,7 +95,7 @@ app.post("/login", (req, res) => {
 });
 
 app.get("/petition", (req, res) => {
-    console.log("req.session in petition route: ", req.session);
+    console.log("req.session in petition route:", req.session);
     if (req.session.signed) {
         res.redirect("/thanks");
     } else {
@@ -178,32 +177,118 @@ app.post("/profile", (req, res) => {
 });
 
 app.get("/profile/edit", (req, res) => {
-    res.render("edit", {});
-});
-
-app.post("/profile/edit", (req, res) => {
-    const { first, last, email, password, age, city, url } = req.body;
-    db.editProfile().then(() => {
-        if (!req.body.password) {
-            // HERE!!!
-            // user has not changed their password
-            // we should leave the value in the DB as it is
-        } else {
-            req.body.password;
-            //user has updated password
-            //we should update db with new value
-        }
+    const userId = req.session.userId;
+    db.getUserProfile(userId).then(({ rows }) => {
+        const { first, last, email, age, city, url } = rows[0];
+        res.render("edit", {
+            first,
+            last,
+            email,
+            age,
+            city,
+            url,
+        });
     });
 });
 
-app.listen(process.env.PORT || 8080, () =>
-    console.log("petition server listening 🍌")
-);
+app.post("/profile/edit", (req, res) => {
+    const userId = req.session.userId;
+    const { first, last, email, password, age, city, url } = req.body;
+    if (!req.body.password) {
+        db.editUsers(userId, first, last, email)
+            .then(() => {
+                db.editUserProfile(userId, age, city, url)
+                    .then(() => {
+                        res.redirect("/profile");
+                    })
+                    .catch((err) => {
+                        console.log("err in edit user profile", err);
+                        res.render("edit", {
+                            first,
+                            last,
+                            email,
+                            age,
+                            city,
+                            url,
+                            err: true,
+                        });
+                    });
+            })
+            .catch((err) => {
+                console.log("error in edit users", err);
+                res.render("edit", {
+                    first,
+                    last,
+                    email,
+                    age,
+                    city,
+                    url,
+                    err: true,
+                });
+            });
+    } else {
+        hash(password)
+            .then((hashedPW) => {
+                db.editUsersWithPassword(userId, first, last, email, hashedPW)
+                    .then(() => {
+                        db.editUserProfile(userId, age, url, city)
+                            .then(() => {
+                                res.redirect("/profile");
+                            })
+                            .catch((err) => {
+                                console.log("err in edit user profile", err);
+                                res.render("edit", {
+                                    first,
+                                    last,
+                                    email,
+                                    age,
+                                    city,
+                                    url,
+                                    err: true,
+                                });
+                            });
+                    })
+                    .catch((err) => {
+                        console.log("err in edit users with password", err);
+                        res.render("edit", {
+                            first,
+                            last,
+                            email,
+                            age,
+                            city,
+                            url,
+                            err: true,
+                        });
+                    });
+            })
+            .catch((err) => {
+                console.log("hash password err:", err);
+                res.render("edit", {
+                    first,
+                    last,
+                    email,
+                    age,
+                    city,
+                    url,
+                    err: true,
+                });
+            });
+    }
+});
 
-//atob(), btoa()
+app.post("/thanks", (req, res) => {
+    const userId = req.session.userId;
+    db.deleteSig(userId)
+        .then(() => {
+            req.session.signed = null;
+            res.redirect("/petition");
+        })
+        .catch((err) => console.log("Err in delete sig", err));
+});
 
-// DELETE FROM users WHERE id = $1;
-
-/* <form action="delete-signature" method="POST">
-    <button>Delete Signature</button>
-</form> */
+console.log("Main module", require.main == module);
+if (require.main == module) {
+    app.listen(process.env.PORT || 8080, () =>
+        console.log("petition server listening 🍌")
+    );
+}

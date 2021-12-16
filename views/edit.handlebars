@@ -1,18 +1,18 @@
 <form action="/profile/edit" method="post">
     <p>Edit your profile 🥰</p>
-    <input type="text" placeholder="firstname" name="first" />
+    <input type="text" value="{{first}}" placeholder="firstname" name="first" />
     <br />
-    <input type="text" placeholder="lastname" name="last" />
+    <input type="text" value="{{last}}" placeholder="lastname" name="last" />
     <br />
-    <input type="text" placeholder="email" name="email" />
+    <input type="text" value="{{email}}" placeholder="email" name="email" />
     <br />
     <input type="text" placeholder="password" name="password" />
     <br />
-    <input type="text" placeholder="age" name="age" />
+    <input type="text" value="{{age}}" placeholder="age" name="age" />
     <br />
-    <input type="text" placeholder="city" name="city" />
+    <input type="text" value="{{city}}" placeholder="city" name="city" />
     <br />
-    <input type="text" placeholder="website" name="url" />
+    <input type="text" value="{{url}}" placeholder="website" name="url" />
     <br />
     <button type="submit"><strong>SUBMIT</strong></button>
     {{#if err}}

@@ -28,5 +28,4 @@
 
 
     
-    -- Inner join 3 tables
 
