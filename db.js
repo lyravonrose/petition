@@ -21,30 +21,25 @@ module.exports.getSignatureNumbers = () => {
     return db.query(q);
 };
 //#3
-module.exports.getSigners = (
-    UserId,
-    firstName,
-    lastName,
-    userAge,
-    userCity,
-    userUrl
-) => {
+module.exports.getSigners = () => {
     const q = `SELECT users.id, users.first, users.last FROM users
     LEFT JOIN user_profiles
-    ON users.id = user_profiles.id
+    ON users.id = user_profiles.user_id
     INNER JOIN signatures
-    ON users.id = signatures.id`;
-    const params = [UserId, firstName, lastName, userAge, userCity, userUrl];
-    return db.query(q, params);
+    ON users.id = signatures.user_id`;
+    return db.query(q);
 };
 
 //#4
 module.exports.getSignersFromCity = (userCity) => {
     const q = `SELECT users.id, users.first, users.last FROM users
     LEFT JOIN user_profiles
-    ON users.id = user_profiles.id WHERE LOWER(city)= LOWER($1)`;
+    ON users.id = user_profiles.user_id
+    INNER JOIN signatures
+    ON users.id = signatures.user_id
+    WHERE LOWER(city)= LOWER($1)`;
     const params = [userCity];
-    return db.query(q);
+    return db.query(q, params);
 };
 
 //#2
@@ -68,7 +63,7 @@ module.exports.addUsers = (firstName, lastName, userEmail, userPassword) => {
 module.exports.getUserByEmailAdress = (email) => {
     const q = `SELECT users.id, users.first, users.last, users.email, users.password FROM users
     JOIN signatures
-    ON users.id = signatures.id
+    ON users.id = signatures.user_id
     WHERE email=$1`;
     const params = [email];
     return db.query(q, params);
@@ -78,5 +73,57 @@ module.exports.addProfile = (userId, userAge, userCity, userUrl) => {
     const q = `INSERT INTO user_profiles (user_id, age, city, url) VALUES ($1, $2, $3, $4)`;
     const params = [userId, userAge, userCity, userUrl];
     return db.query(q, params);
-    s;
+};
+module.exports.editProfile = (
+    firstName,
+    lastName,
+    userEmail,
+    userAge,
+    userCity,
+    userUrl
+) => {
+    const q = `SELECT users.id, users.first, users.last, users.email FROM users
+    JOIN user_profiles
+    ON users.id = user_profiles.user_id`;
+    const params = [
+        userId,
+        firstName,
+        lastName,
+        userEmail,
+        userPassword,
+        userAge,
+        userCity,
+        userUrl,
+    ];
+    return db.query(q, params);
+};
+
+`INSERT INTO users (first, last, email)
+VALUES ('Penélope Cruz', 43, 1)
+ON CONFLICT (name)
+DO UPDATE SET age = 43, oscars = 1;`;
+
+module.exports.updateProfile = (
+    firstName,
+    lastName,
+    userEmail,
+    userAge,
+    userCity,
+    userUrl
+) => {
+    const q = `INSERT INTO users (first, last, email)
+    VALUES ($1, $2, $3)
+    INSERT INTO user_profiles(age,city, url)
+    ON users.id = user_profiles.id`;
+    const params = [
+        userId,
+        firstName,
+        lastName,
+        userEmail,
+        userPassword,
+        userAge,
+        userCity,
+        userUrl,
+    ];
+    return db.query(q, params);
 };

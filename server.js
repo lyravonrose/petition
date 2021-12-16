@@ -5,6 +5,7 @@ const db = require("./db");
 const { engine } = require("express-handlebars");
 const cookieSession = require("cookie-session");
 const { compare, hash } = require("./bc");
+const helmet = require("helmet");
 
 const packageLock =
     process.env.PACKAGE_LOCK || require("./package-lock").PACKAGE_LOCK;
@@ -21,6 +22,7 @@ if (process.env.NODE_ENV == "production") {
         res.redirect(`https://${req.hostname}${req.url}`);
     });
 }
+app.use(helmet());
 app.use(express.static("./public"));
 app.use(express.urlencoded({ extended: false }));
 app.use((req, res, next) => {
@@ -69,7 +71,7 @@ app.post("/login", (req, res) => {
     // we'd first go to the database to retreive the hash
     // for the email that the user provided
     const { email, password } = req.body;
-    const claimedPassword = req.body.password;
+    // const claimedPassword = req.body.password;
     db.getUserByEmailAdress(email)
         .then((result) => {
             console.log(result);
@@ -105,7 +107,7 @@ app.get("/petition", (req, res) => {
 app.post("/petition", (req, res) => {
     const data = req.body;
     console.log("IN POST/petition", req.body);
-    db.addSignatures(data.first, data.last, data.signature)
+    db.addSignatures(data.signature)
         .then(({ rows }) => {
             req.session.signed = rows[0].id;
             res.redirect("/thanks");
@@ -130,35 +132,68 @@ app.get("/thanks", (req, res) => {
 
 app.get("/signers", (req, res) => {
     db.getSigners()
-        .then(({ rows: signers }) => {
-            res.render("signers", signers);
+        .then(({ rows }) => {
+            res.render("signers", rows);
         })
         .catch((err) => {
             res.redirect("/petition");
         });
-    //SELECT first and last values of every person that has signed from the database and pass them to signers.handlebars
+});
+
+app.get("/signers/:city", (req, res) => {
+    const userCity = req.params.city;
+    db.getSignersFromCity(userCity)
+        .then(({ rows }) => {
+            res.render("signers", rows);
+        })
+        .catch((err) => {
+            res.redirect("/petition");
+        });
 });
 
 app.get("/profile", (req, res) => {
     res.render("profile", {});
 });
 app.post("/profile", (req, res) => {
-    const { age, url, city } = req.body;
+    const { user_id, age, city, url } = req.body;
     console.log("IN POST/profile", req.body);
-    db.addProfile(age, url, city)
+    if (!age && !url && !city) {
+    } else {
+        if (
+            !url.startsWith("http:") ||
+            !url.startsWith("https:") ||
+            !url.startsWith("//")
+        ) {
+            res.sendStatus(403);
+        }
+    }
+    db.addProfile(user_id, age, city, url)
         .then(({ rows }) => {
-            req.session.signed = rows[0].id;
             res.redirect("/petition");
         })
         .catch((err) => {
             console.log("no info added :(", err);
             res.render("/profile");
         });
+});
 
-    if (age || url || city === null) {
-        res.redirect("");
-    }
-    // When the user submits the form from the GET route, the data should go into the new user_profiles table. All of the data is optional, so if none of it is present you can skip doing the query. Either way, you should end by redirecting to /petition (unless there's an error, in which case you should re-render the form).
+app.get("/profile/edit", (req, res) => {
+    res.render("edit", {});
+});
+
+app.post("/profile/edit", (req, res) => {
+    const { first, last, email, password, age, city, url } = req.body;
+    db.editProfile().then(() => {
+        if (!req.body.password) {
+            // HERE!!!
+            // user has not changed their password
+            // we should leave the value in the DB as it is
+        } else {
+            req.body.password;
+            //user has updated password
+            //we should update db with new value
+        }
+    });
 });
 
 app.listen(process.env.PORT || 8080, () =>
@@ -166,18 +201,6 @@ app.listen(process.env.PORT || 8080, () =>
 );
 
 //atob(), btoa()
-
-app.post("/profile/edit", (req, res) => {
-    if (!req.body.password) {
-        // HERE!!!
-        // user has not changed their password
-        // we should leave the value in the DB as it is
-    } else {
-        req.body.password;
-        //user has updated password
-        //we should update db with new value
-    }
-});
 
 // DELETE FROM users WHERE id = $1;
 

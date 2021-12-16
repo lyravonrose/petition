@@ -4,9 +4,9 @@
   
     CREATE TABLE user_profiles(
       id SERIAL PRIMARY KEY,
-      age INT NOT NULL,
-      url VARCHAR(255) NOT NULL,
-      city VARCHAR(255) NOT NULL,
+      age INT,
+      url VARCHAR(255),
+      city VARCHAR(255),
       user_id INT NOT NULL UNIQUE
     );
 

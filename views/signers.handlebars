@@ -2,10 +2,12 @@
     <p>
         {{first}}
         {{last}}
+        {{age}}
+        {{#if city}}
+            <a href="/signers/{{city}}">{{city}}</a>
+        {{/if}}
+        {{#if url}}
+            <a href="{{url}}" target="_blank">{{url}}</a>
+        {{/if}}
     </p>
-    {{#if age}}
-        <img src="{{canvas}}" />
-    {{/if}}
 {{/each}}
-
-{{! signers.handlebars - for each signer, show the age and city (if they exist) and if the url exists, link up the name (make sure the url does not run Javascript code). Cities, when shown, should link to a new url }}
