@@ -5,13 +5,6 @@
 
 body {
     text-align: center;
-    margin: 30px;
-    padding: 40px;
-    border: 2px solid oldlace;
-    position: absolute;
-    top: 0;
-    left: 60%;
-    transform: translateX(-80%);
 }
 
 canvas {
@@ -23,4 +16,11 @@ canvas {
 button {
     background-color: rgba(211, 123, 137, 0.3);
     border-radius: 0px 20px;
+}
+
+.container {
+    width: 500px;
+    margin: 30px auto;
+    padding: 40px;
+    border: 2px solid oldlace;
 }

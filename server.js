@@ -73,7 +73,6 @@ app.post("/login", (req, res) => {
     const { email, password } = req.body;
     db.getUserByEmailAdress(email)
         .then((result) => {
-            console.log(result);
             compare(password, result.rows[0].password)
                 .then((match) => {
                     console.log(
@@ -95,18 +94,20 @@ app.post("/login", (req, res) => {
 });
 
 app.get("/petition", (req, res) => {
-    console.log("req.session in petition route:", req.session);
-    if (req.session.signed) {
-        res.redirect("/thanks");
-    } else {
-        res.render("petition");
-    }
+    const userId = req.session.userId;
+    db.getSignatures(userId).then(({ rows }) => {
+        if (rows.length) {
+            res.redirect("/thanks");
+        } else {
+            res.render("petition");
+        }
+    });
 });
 
 app.post("/petition", (req, res) => {
-    const data = req.body;
     console.log("IN POST/petition", req.body);
-    db.addSignatures(data.signature)
+    const userId = req.session.userId;
+    db.addSignatures(userId, req.body.signature)
         .then(({ rows }) => {
             req.session.signed = rows[0].id;
             res.redirect("/thanks");
@@ -114,15 +115,15 @@ app.post("/petition", (req, res) => {
         })
         .catch((err) => {
             console.log("no signatures added :(", err);
-            res.render("/petition");
+            res.render("petition", { err: true });
         });
 });
 app.get("/thanks", (req, res) => {
     console.log("/thanks", req.session);
-    const signatureId = req.session.signed;
-    db.getSignatures(signatureId).then(({ rows }) => {
+    const userId = req.session.userId;
+    db.getSignatures(userId).then(({ rows }) => {
         if (rows.length) {
-            res.render("/thanks");
+            res.render("thanks");
         } else {
             res.redirect("/petition");
         }
@@ -132,6 +133,7 @@ app.get("/thanks", (req, res) => {
 app.get("/signers", (req, res) => {
     db.getSigners()
         .then(({ rows }) => {
+            console.log("SIGNERS", rows);
             res.render("signers", rows);
         })
         .catch((err) => {
@@ -154,26 +156,30 @@ app.get("/profile", (req, res) => {
     res.render("profile", {});
 });
 app.post("/profile", (req, res) => {
-    const { user_id, age, city, url } = req.body;
+    console.log("session", req.session.userId);
+    const userId = req.session.userId;
+    const { age, city, url } = req.body;
     console.log("IN POST/profile", req.body);
     if (!age && !url && !city) {
+        res.redirect("/petition");
     } else {
         if (
-            !url.startsWith("http:") ||
-            !url.startsWith("https:") ||
+            !url.startsWith("http:") &&
+            !url.startsWith("https:") &&
             !url.startsWith("//")
         ) {
-            res.sendStatus(403);
+            // res.sendStatus(403);
+            res.redirect("/profile");
         }
+        db.addProfile(userId, age, city, url)
+            .then(({ rows }) => {
+                res.redirect("/petition");
+            })
+            .catch((err) => {
+                console.log("no info added :(", err);
+                res.render("profile");
+            });
     }
-    db.addProfile(user_id, age, city, url)
-        .then(({ rows }) => {
-            res.redirect("/petition");
-        })
-        .catch((err) => {
-            console.log("no info added :(", err);
-            res.render("/profile");
-        });
 });
 
 app.get("/profile/edit", (req, res) => {
@@ -199,7 +205,7 @@ app.post("/profile/edit", (req, res) => {
             .then(() => {
                 db.editUserProfile(userId, age, city, url)
                     .then(() => {
-                        res.redirect("/profile");
+                        res.redirect("/profile/edit");
                     })
                     .catch((err) => {
                         console.log("err in edit user profile", err);
@@ -233,7 +239,7 @@ app.post("/profile/edit", (req, res) => {
                     .then(() => {
                         db.editUserProfile(userId, age, url, city)
                             .then(() => {
-                                res.redirect("/profile");
+                                res.redirect("/profile/edit");
                             })
                             .catch((err) => {
                                 console.log("err in edit user profile", err);

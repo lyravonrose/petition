@@ -5,24 +5,26 @@ const username = "postgres";
 const password = "postgres";
 
 const db = spicedPg(
-    process.env.DATABASE_URL ||
-        "postgres://spicedling:password@localhost:5432/petition"
-    // `postgres:${username}:${password}@localhost:5432/${database}`
+    `postgres:${username}:${password}@localhost:5432/${database}`
 );
+// process.env.DATABASE_URL ||
+//     "postgres://spicedling:password@localhost:5432/petition"
+
 console.log("db: ", db);
 console.log(`[db] connecting to:${database}`);
 
-module.exports.getSignatures = (id) => {
-    const q = "SELECT signature FROM signatures WHERE id = $1";
-    return db.query(q);
+module.exports.getSignatures = (userId) => {
+    const q = "SELECT signature FROM signatures WHERE user_id = $1";
+    const params = [userId];
+    return db.query(q, params);
 };
 module.exports.getSignatureNumbers = () => {
     const q = "SELECT COUNT(*) FROM signatures";
     return db.query(q);
 };
-//#3
+
 module.exports.getSigners = () => {
-    const q = `SELECT users.id, users.first, users.last FROM users
+    const q = `SELECT * FROM users
     LEFT JOIN user_profiles
     ON users.id = user_profiles.user_id
     INNER JOIN signatures
@@ -30,7 +32,6 @@ module.exports.getSigners = () => {
     return db.query(q);
 };
 
-//#4
 module.exports.getSignersFromCity = (userCity) => {
     const q = `SELECT users.id, users.first, users.last FROM users
     LEFT JOIN user_profiles
@@ -41,7 +42,6 @@ module.exports.getSignersFromCity = (userCity) => {
     return db.query(q, params);
 };
 
-//#2
 module.exports.addSignatures = (userId, signature) => {
     const q = `INSERT INTO signatures (user_id, signature) VALUES ($1, $2) RETURNING id`;
     const params = [userId, signature];
@@ -53,12 +53,6 @@ module.exports.addUsers = (firstName, lastName, userEmail, userPassword) => {
     return db.query(q, params);
 };
 
-// module.exports.getUsers = (email) => {
-//     const q = "SELECT first, last, password FROM users WHERE email";
-//     return db.query(q);
-// };
-
-//#5
 module.exports.getUserByEmailAdress = (email) => {
     const q = `SELECT users.id, users.first, users.last, users.email, users.password FROM users
     JOIN signatures
@@ -71,7 +65,7 @@ module.exports.getUserByEmailAdress = (email) => {
 module.exports.getUserProfile = (userId) => {
     const q = `
         SELECT
-            users.id, users.first, users.last, users.email,
+            users.id, users.first, users.last, users.email
         FROM users
         LEFT JOIN user_profiles
         ON users.id = user_profiles.user_id
