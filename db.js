@@ -5,10 +5,9 @@ const username = "postgres";
 const password = "postgres";
 
 const db = spicedPg(
-    `postgres:${username}:${password}@localhost:5432/${database}`
+    process.env.DATABASE_URL ||
+        `postgres:${username}:${password}@localhost:5432/${database}`
 );
-// process.env.DATABASE_URL ||
-//     "postgres://spicedling:password@localhost:5432/petition"
 
 console.log("db: ", db);
 console.log(`[db] connecting to:${database}`);
@@ -65,7 +64,8 @@ module.exports.getUserByEmailAdress = (email) => {
 module.exports.getUserProfile = (userId) => {
     const q = `
         SELECT
-            users.id, users.first, users.last, users.email
+            users.id, users.first, users.last, users.email,
+            user_profiles.age, user_profiles.city, user_profiles.url
         FROM users
         LEFT JOIN user_profiles
         ON users.id = user_profiles.user_id
@@ -81,15 +81,6 @@ module.exports.addProfile = (userId, userAge, userCity, userUrl) => {
     return db.query(q, params);
 };
 
-module.exports.checkIfUserSkipped = (userId, userAge, userUrl, userCity) => {
-    const q = `INSERT INTO user_profiles (user_id, age, url, city)
-    VALUES ($1,$2,$3, $4)
-    ON CONFLICT (user_profiles.user_id)
-    DO UPDATE SET age = $2, url = $3, city = $4;`;
-    const params = [userId, userAge, userUrl, userCity];
-    return db.query(q, params);
-};
-
 module.exports.editUsers = (userId, firstName, lastName, userEmail) => {
     const q = `UPDATE users SET (first, last, email) = ($2, $3, $4) WHERE users.id = $1`;
     const params = [userId, firstName, lastName, userEmail];
@@ -98,9 +89,9 @@ module.exports.editUsers = (userId, firstName, lastName, userEmail) => {
 
 module.exports.editUserProfile = (userId, userAge, userUrl, userCity) => {
     const q = `INSERT INTO user_profiles (user_id, age, url, city)
-    VALUES ($1,$2,$3, $4)
+    VALUES ($1,$2,$3,$4)
     ON CONFLICT (user_id)
-    DO UPDATE SET user_id = $1, age = $2, url = $3, city = $4;`;
+    DO UPDATE SET age = $2, url = $3, city = $4;`;
     const params = [userId, userAge, userUrl, userCity];
     return db.query(q, params);
 };

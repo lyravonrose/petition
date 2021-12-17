@@ -67,19 +67,16 @@ app.get("/login", (req, res) => {
     res.render("login", {});
 });
 app.post("/login", (req, res) => {
-    // this is where we will want to use compare
-    // we'd first go to the database to retreive the hash
-    // for the email that the user provided
     const { email, password } = req.body;
     db.getUserByEmailAdress(email)
         .then((result) => {
             compare(password, result.rows[0].password)
                 .then((match) => {
+                    req.session.userId = result.rows[0].id;
                     console.log(
                         "do provided PW and db stored hash match?",
                         match
                     );
-                    res.sendStatus(200);
                     res.redirect("/petition");
                 })
                 .catch((err) => {
@@ -118,17 +115,6 @@ app.post("/petition", (req, res) => {
             res.render("petition", { err: true });
         });
 });
-app.get("/thanks", (req, res) => {
-    console.log("/thanks", req.session);
-    const userId = req.session.userId;
-    db.getSignatures(userId).then(({ rows }) => {
-        if (rows.length) {
-            res.render("thanks");
-        } else {
-            res.redirect("/petition");
-        }
-    });
-});
 
 app.get("/signers", (req, res) => {
     db.getSigners()
@@ -158,17 +144,16 @@ app.get("/profile", (req, res) => {
 app.post("/profile", (req, res) => {
     console.log("session", req.session.userId);
     const userId = req.session.userId;
-    const { age, city, url } = req.body;
+    let { age, city, url } = req.body;
     console.log("IN POST/profile", req.body);
     if (!age && !url && !city) {
         res.redirect("/petition");
     } else {
         if (
-            !url.startsWith("http:") &&
-            !url.startsWith("https:") &&
-            !url.startsWith("//")
+            url &&
+            (!url.startsWith("http://") || !url.startsWith("https://"))
         ) {
-            res.redirect("/profile");
+            url = "https://" + url;
         }
         db.addProfile(userId, age, city, url)
             .then(({ rows }) => {
@@ -183,6 +168,8 @@ app.post("/profile", (req, res) => {
 
 app.get("/profile/edit", (req, res) => {
     const userId = req.session.userId;
+    const updated = req.query.updated;
+    console.log("userId", userId);
     db.getUserProfile(userId).then(({ rows }) => {
         const { first, last, email, age, city, url } = rows[0];
         res.render("edit", {
@@ -192,19 +179,21 @@ app.get("/profile/edit", (req, res) => {
             age,
             city,
             url,
+            updated,
         });
     });
 });
 
 app.post("/profile/edit", (req, res) => {
     const userId = req.session.userId;
-    const { first, last, email, password, age, city, url } = req.body;
+    let { first, last, email, password, age, city, url } = req.body;
     if (!req.body.password) {
         db.editUsers(userId, first, last, email)
             .then(() => {
-                db.editUserProfile(userId, age, city, url)
+                age = age ? Number(age) : null;
+                db.editUserProfile(userId, age, url, city)
                     .then(() => {
-                        res.redirect("/profile/edit");
+                        res.redirect("/profile/edit?updated=true");
                     })
                     .catch((err) => {
                         console.log("err in edit user profile", err);
@@ -238,7 +227,7 @@ app.post("/profile/edit", (req, res) => {
                     .then(() => {
                         db.editUserProfile(userId, age, url, city)
                             .then(() => {
-                                res.redirect("/profile/edit");
+                                res.redirect("/profile/edit?updated=true");
                             })
                             .catch((err) => {
                                 console.log("err in edit user profile", err);
@@ -279,6 +268,24 @@ app.post("/profile/edit", (req, res) => {
                 });
             });
     }
+});
+
+app.get("/thanks", (req, res) => {
+    const userId = req.session.userId;
+    db.getSignatures(userId).then(({ rows }) => {
+        if (rows.length) {
+            const signature = rows[0].signature;
+            db.getSignatureNumbers().then(({ rows }) => {
+                const signatureCount = rows[0].count;
+                res.render("thanks", {
+                    signatureCount,
+                    signature,
+                });
+            });
+        } else {
+            res.redirect("/petition");
+        }
+    });
 });
 
 app.post("/thanks", (req, res) => {

@@ -1,3 +1,7 @@
+{{#if updated}}
+    <p><strong>Your profile has been updated!
+            <a href="/petition">Go to the petition page</a></strong></p>
+{{/if}}
 <form action="/profile/edit" method="post">
     <p>Edit your profile 🥰</p>
     <input type="text" value="{{first}}" placeholder="firstname" name="first" />
@@ -6,7 +10,7 @@
     <br />
     <input type="text" value="{{email}}" placeholder="email" name="email" />
     <br />
-    <input type="text" placeholder="password" name="password" />
+    <input type="password" placeholder="password" name="password" />
     <br />
     <input type="text" value="{{age}}" placeholder="age" name="age" />
     <br />

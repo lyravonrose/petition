@@ -3,10 +3,11 @@
 <p>{{signatureCount}} people have signed 🎭 </p>
 
 {{#if signature}}
-    <img src="{{canvas}}" />
-
-    <form action="/thanks" method="post"><button><strong
-            >DELETE</strong></button></form>
-
+    <img src="{{signature}}" />
 {{/if}}
+<a href="/profile/edit">Edit your profile</a>
+<br />
+<br />
+<form action="/thanks" method="post"><button><strong>Delete Signature 🤔</strong></button></form>
+
 {{! Signature can be rendered onscreen by putting the signature URL in an image tag in here. }}

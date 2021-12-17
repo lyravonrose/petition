@@ -1,3 +1,4 @@
+<p>Please draw your signature below:</p>
 <form action="/petition" method="post">
     {{! <input type="text" name="firstName" />
     <input type="text" name="lastName" /> }}
@@ -8,7 +9,7 @@
     <canvas width="500" height="200" id="inputCanvas"></canvas>
     <br />
     <br />
-    <button type="reset"><strong>RESET💩</strong></button>
+
     {{#if err}}
         <p>Failed to insert signature 😞</p>
     {{/if}}
