@@ -168,7 +168,6 @@ app.post("/profile", (req, res) => {
             !url.startsWith("https:") &&
             !url.startsWith("//")
         ) {
-            // res.sendStatus(403);
             res.redirect("/profile");
         }
         db.addProfile(userId, age, city, url)
