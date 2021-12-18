@@ -1,5 +1,8 @@
+{{> bottle }}
 <form action="/register" method="post">
-    <p>please support by joining us 🤡</p>
+<h2>Hello, Spicedlings!</h2>
+<h3>Let's get hipster Mate(s) with different flavours (e.g. Matcha) in our new Spiced location, for more creative juices to flow.</h3>
+    <h4>Please support by joining us 🤡</h4>
     <input type="text" placeholder="firstname" name="first" />
     <br />
     <input type="text" placeholder="lastname" name="last" />
@@ -12,6 +15,7 @@
     {{#if err}}
         <p>Error on registration 😞</p>
     {{/if}}
+    
 
     <p><strong>Already have an account? </strong><a href="/login">Log in</a></p>
 
