@@ -18,6 +18,12 @@ button {
     border-radius: 0px 20px;
 }
 
+input {
+    width: 50%;
+    border-radius: 5px;
+    border: none;
+    border-bottom: 3px solid rgba(20, 83, 99, 0.6);
+}
 .container {
     width: 500px;
     margin: 30px auto;
